@@ -26,7 +26,7 @@ local Window = Rayfield:CreateWindow({
       RememberJoins = true
    },
 
-   KeySystem = false, 
+   KeySystem = true, 
    KeySettings = {
       Title = "BACOT Key System",
       Subtitle = "Key System",
