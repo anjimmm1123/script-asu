@@ -1,6 +1,5 @@
 repeat wait() until game:IsLoaded()
 
--- INISIALISASI SERVICE ROBLOX
 local cloneref = cloneref or function(o) return o end
 Workspace = cloneref(game:GetService("Workspace"))
 Players = cloneref(game:GetService("Players"))
@@ -14,7 +13,11 @@ CoreGui = cloneref(game:GetService("CoreGui"))
 RunService = cloneref(game:GetService("RunService"))
 Replicated = cloneref(game:GetService("ReplicatedStorage"))
 
--- LIST GAME DAN SCRIPT ID
+-- URL UNTUK MENGAMBIL KUNCI YANG VALID
+local VALID_KEY_URL = "https://pastebin.com/raw/nSyqtwrG"
+-- URL SKRIP UTAMA (Ganti jika skrip utama Anda bukan lagi Luarmor)
+local MAIN_SCRIPT_URL = "https://sdkapi-public.luarmor.net/library.lua"
+
 local ListGame = {
     ["3808223175"] = "4fe2dfc202115670b1813277df916ab2", -- Jujutsu Infinite
     ["994732206"]  = "e2718ddebf562c5c4080dfce26b09398", -- Blox Fruits
@@ -46,11 +49,12 @@ local ListGame = {
 }
 
 local script_id
+local executor_name = getexecutorname():match("^%s*(.-)%s*$") or "nigger"
 local game_id = tostring(game.GameId)
-local list_id = ListGame[game_id]
+local list_id = ListGame[tostring(game.GameId)]
 
 if not list_id then
-    Players.LocalPlayer:Kick("This game is not supported by xavyera.")
+    Players.LocalPlayer:Kick("This game is not supported.")
 end
 
 if CoreGui:FindFirstChild("System") then
@@ -59,142 +63,464 @@ end
 
 script_id = list_id
 
--- ====================================================================
--- FUNGSI UTILITAS (Notifikasi)
--- ====================================================================
-local NotificationGUI = PlayerGui:FindFirstChild("Notifications") or Instance.new("ScreenGui")
-NotificationGUI.Name = "Notifications"
-NotificationGUI.Parent = PlayerGui
-
-local Container = NotificationGUI:FindFirstChild("Container") or Instance.new("Frame")
-Container.Name = "Container"
-Container.AnchorPoint = Vector2.new(1, 0)
-Container.Position = UDim2.new(1, -25, 0, 25)
-Container.BackgroundTransparency = 1
-Container.Size = UDim2.fromOffset(350, 600)
-Container.Parent = NotificationGUI
-
-if not Container:FindFirstChild("UIListLayout") then
-    local Layout = Instance.new("UIListLayout")
-    Layout.SortOrder = Enum.SortOrder.LayoutOrder
-    Layout.Padding = UDim.new(0, 8)
-    Layout.VerticalAlignment = Enum.VerticalAlignment.Top
-    Layout.HorizontalAlignment = Enum.HorizontalAlignment.Right
-    Layout.Parent = Container
-end
-
-function NotifyCustom(title, content, duration)
-    duration = duration or 5
-    local color = Color3.fromRGB(255, 188, 254)
-
-    local Notification = Instance.new("Frame")
-    Notification.Name = "Notification"
-    Notification.BackgroundTransparency = 0.06
-    Notification.AutomaticSize = Enum.AutomaticSize.Y
-    Notification.BackgroundColor3 = Color3.fromRGB(16, 16, 16)
-    Notification.BorderSizePixel = 0
-    Notification.Size = UDim2.fromOffset(320, 70)
-    Notification.Parent = Container
-
-    local NotifCorner = Instance.new("UICorner")
-    NotifCorner.CornerRadius = UDim.new(0, 8)
-    NotifCorner.Parent = Notification
-
-    local NotifStroke = Instance.new("UIStroke")
-    NotifStroke.Color = Color3.fromRGB(158, 114, 158)
-    NotifStroke.Transparency = 0.8
-    NotifStroke.Parent = Notification
-
-    local TitleText = Instance.new("TextLabel")
-    TitleText.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.SemiBold)
-    TitleText.Text = title
-    TitleText.TextColor3 = Color3.fromRGB(199, 199, 203)
-    TitleText.TextSize = 16
-    TitleText.TextXAlignment = Enum.TextXAlignment.Left
-    TitleText.BackgroundTransparency = 1
-    TitleText.Size = UDim2.new(1, -20, 0, 20)
-    TitleText.Position = UDim2.fromOffset(10, 6)
-    TitleText.Parent = Notification
-
-    local ContentText = Instance.new("TextLabel")
-    ContentText.FontFace = Font.new("rbxassetid://12187365364")
-    ContentText.Text = content
-    ContentText.TextColor3 = Color3.fromRGB(180, 180, 185)
-    ContentText.TextSize = 14
-    ContentText.TextXAlignment = Enum.TextXAlignment.Left
-    ContentText.TextYAlignment = Enum.TextYAlignment.Top
-    ContentText.BackgroundTransparency = 1
-    ContentText.AutomaticSize = Enum.AutomaticSize.Y
-    ContentText.TextWrapped = true
-    ContentText.Size = UDim2.new(1, -20, 0, 0)
-    ContentText.Position = UDim2.fromOffset(10, 28)
-    ContentText.Parent = Notification
-
-    local ProgressBar = Instance.new("Frame")
-    ProgressBar.BackgroundColor3 = Color3.fromRGB(44, 38, 44)
-    ProgressBar.BorderSizePixel = 0
-    ProgressBar.Size = UDim2.new(1, -20, 0, 6)
-    ProgressBar.Position = UDim2.new(0, 10, 1, -12)
-    ProgressBar.Parent = Notification
-
-    local ProgressFill = Instance.new("Frame")
-    ProgressFill.BackgroundColor3 = color
-    ProgressFill.BorderSizePixel = 0
-    ProgressFill.Size = UDim2.fromScale(1, 1)
-    ProgressFill.Parent = ProgressBar
-
-    local ProgressFillCorner = Instance.new("UICorner")
-    ProgressFillCorner.Parent = ProgressFill
-
-    TweenService:Create(ProgressFill, TweenInfo.new(duration, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 1, 0)}):Play()
-
-    task.delay(duration, function()
-        TweenService:Create(Notification, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
-        task.wait(0.3)
-        Notification:Destroy()
-    end)
-
-    return Notification
-end
-
-function Notification(Type, Message)
-    NotifyCustom(Type, Message, 5)
-end
-
--- ====================================================================
--- FUNGSI UTAMA: MEMUAT SKRIP TANPA KEY SYSTEM
--- ====================================================================
-local function LoadScript(config)
-    -- URL ini HARUS dipertahankan untuk mengunduh konten skrip utama.
-    local script_url = "https://sdkapi-public.luarmor.net/library.lua"
-
-    Notification("Info", "Loading xavyera script...")
-    
-    local success, result = pcall(function()
-        -- 1. Mendapatkan konten skrip
-        local script_content = game:HttpGet(script_url)
-        -- 2. Menjalankan konten untuk mendapatkan API
-        local api = loadstring(script_content)()
-        
-        -- 3. Menetapkan Script ID
-        api.script_id = config.ScriptId
-        
-        -- 4. Memuat skrip utama (Key System dilompati, langsung muat konten)
-        api.load_script()
-        
-        Notification("Success", "xavyera loaded successfully!")
-    end)
-
-    if not success then
-        Notification("Error", "Failed to load xavyera:\n" .. tostring(result))
+for _, exec in ipairs({"Xeno", "Solara"}) do
+    if string.find(executor_name, exec) then
+        workspace:SetAttribute("low", true)
+        break
     end
 end
 
--- Konfigurasi skrip
-local XavyeraConfig = {
-    ScriptId = script_id,
-    DisplayName = "xavyera Hub FREE",
-}
+function Task()
+    local status, res1, res2 = pcall(function()
+        -- [MODIFIKASI UTAMA 1]: Muat API dari URL utama
+        local api = loadstring(game:HttpGet(MAIN_SCRIPT_URL))()
+        local Task = {}
+        local v1 = {}
+        local variables = {}
 
--- Panggil fungsi LoadScript untuk langsung memuat skrip
-LoadScript(XavyeraConfig)
+        -- [MODIFIKASI 2]: Pesan Error yang disederhanakan karena tidak lagi menggunakan Luarmor API
+        local error_messages = {
+            KEY_INCORRECT = "The key is incorrect or no longer valid.",
+            DOWNLOAD_FAILED = "Failed to download the valid key list. Check your connection or Pastebin link.",
+            UNKNOWN_ERROR = "An unknown error occurred. Please contact support."
+        }
+        
+        -------------------------------------------------------------------------------
+        v1.__index = v1
+        local v_u_3 = buffer and buffer.tostring or function(b) return tostring(b) end
+        local v_u_4 = buffer and buffer.fromstring or function(s) return s end
+        function v1.revert(p6) return v_u_4(p6) end
+        function v1.convert(p51) return v_u_3(p51) end
+        -------------------------------------------------------------------------------
+        local LSMT = game:GetObjects("rbxassetid://126113170246030")[1]
+
+        function Close(Objectftween)
+            TweenService:Create(Objectftween, TweenInfo.new(0.65, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                AnchorPoint = Vector2.new(0.5, 0.5),
+                Size = UDim2.new(0, 10, 0, 10),
+                Position = UDim2.new(0.5, 0, 0.5, 0)
+            }):Play()
+
+            task.wait(0.1)
+
+            LSMT:Destroy()
+        end
+
+        local NotificationGUI = PlayerGui:FindFirstChild("Notifications") or Instance.new("ScreenGui")
+        NotificationGUI.Name = "Notifications"
+        NotificationGUI.Parent = PlayerGui
+
+        local Container = NotificationGUI:FindFirstChild("Container") or Instance.new("Frame")
+        Container.Name = "Container"
+        Container.AnchorPoint = Vector2.new(1, 0)
+        Container.Position = UDim2.new(1, -25, 0, 25)
+        Container.BackgroundTransparency = 1
+        Container.Size = UDim2.fromOffset(350, 600)
+        Container.Parent = NotificationGUI
+
+        if not Container:FindFirstChild("UIListLayout") then
+            local Layout = Instance.new("UIListLayout")
+            Layout.SortOrder = Enum.SortOrder.LayoutOrder
+            Layout.Padding = UDim.new(0, 8)
+            Layout.VerticalAlignment = Enum.VerticalAlignment.Top
+            Layout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+            Layout.Parent = Container
+        end
+
+        function NotifyCustom(title, content, duration)
+            duration = duration or 5
+            color = color or Color3.fromRGB(255, 188, 254)
+
+            local Notification = Instance.new("Frame")
+            Notification.Name = "Notification"
+            Notification.BackgroundTransparency = 0.06
+            Notification.AutomaticSize = Enum.AutomaticSize.Y
+            Notification.BackgroundColor3 = Color3.fromRGB(16, 16, 16)
+            Notification.BorderSizePixel = 0
+            Notification.Size = UDim2.fromOffset(320, 70)
+            Notification.Parent = Container
+
+            local NotifCorner = Instance.new("UICorner")
+            NotifCorner.CornerRadius = UDim.new(0, 8)
+            NotifCorner.Parent = Notification
+
+            local NotifStroke = Instance.new("UIStroke")
+            NotifStroke.Color = Color3.fromRGB(158, 114, 158)
+            NotifStroke.Transparency = 0.8
+            NotifStroke.Parent = Notification
+
+            local TitleText = Instance.new("TextLabel")
+            TitleText.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.SemiBold)
+            TitleText.Text = title
+            TitleText.TextColor3 = Color3.fromRGB(199, 199, 203)
+            TitleText.TextSize = 16
+            TitleText.TextXAlignment = Enum.TextXAlignment.Left
+            TitleText.BackgroundTransparency = 1
+            TitleText.Size = UDim2.new(1, -20, 0, 20)
+            TitleText.Position = UDim2.fromOffset(10, 6)
+            TitleText.Parent = Notification
+
+            local ContentText = Instance.new("TextLabel")
+            ContentText.FontFace = Font.new("rbxassetid://12187365364")
+            ContentText.Text = content
+            ContentText.TextColor3 = Color3.fromRGB(180, 180, 185)
+            ContentText.TextSize = 14
+            ContentText.TextXAlignment = Enum.TextXAlignment.Left
+            ContentText.TextYAlignment = Enum.TextYAlignment.Top
+            ContentText.BackgroundTransparency = 1
+            ContentText.AutomaticSize = Enum.AutomaticSize.Y
+            ContentText.TextWrapped = true
+            ContentText.Size = UDim2.new(1, -20, 0, 0)
+            ContentText.Position = UDim2.fromOffset(10, 28)
+            ContentText.Parent = Notification
+
+            local ProgressBar = Instance.new("Frame")
+            ProgressBar.BackgroundColor3 = Color3.fromRGB(44, 38, 44)
+            ProgressBar.BorderSizePixel = 0
+            ProgressBar.Size = UDim2.new(1, -20, 0, 6)
+            ProgressBar.Position = UDim2.new(0, 10, 1, -12)
+            ProgressBar.Parent = Notification
+
+            local ProgressFill = Instance.new("Frame")
+            ProgressFill.BackgroundColor3 = color
+            ProgressFill.BorderSizePixel = 0
+            ProgressFill.Size = UDim2.fromScale(1, 1)
+            ProgressFill.Parent = ProgressBar
+
+            local ProgressFillCorner = Instance.new("UICorner")
+            ProgressFillCorner.Parent = ProgressFill
+
+            TweenService:Create(ProgressFill, TweenInfo.new(duration, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 1, 0)}):Play()
+
+            task.delay(duration, function()
+                TweenService:Create(Notification, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
+                task.wait(0.3)
+                Notification:Destroy()
+            end)
+
+            return Notification
+        end
+
+        function DraggFunction(object, drag_object, enable_taptic, taptic_offset)
+            local dragging = false
+            local relative = nil
+            local off_set = Vector2.zero
+
+            local ScreenGui = object:FindFirstAncestorWhichIsA("ScreenGui")
+            if ScreenGui and ScreenGui.IgnoreGuiInset then
+                off_set = game:GetService('GuiService'):GetGuiInset()
+            end
+
+            drag_object.InputBegan:Connect(function(input, processed)
+                if processed then return end
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = true
+                    relative = object.AbsolutePosition + object.AbsoluteSize * object.AnchorPoint - UserInputService:GetMouseLocation()
+                end
+            end)
+
+            UserInputService.InputEnded:Connect(function(input)
+                if dragging and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+                    dragging = false
+                end
+            end)
+
+            RunService.RenderStepped:Connect(function()
+                if dragging then
+                    local position = UserInputService:GetMouseLocation() + relative + off_set
+                    if enable_taptic and taptic_offset then
+                        TweenService:Create(object, TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Position = UDim2.fromOffset(position.X, position.Y)}):Play()
+                    else
+                        object.Position = UDim2.fromOffset(position.X, position.Y)
+                    end
+                end
+            end)
+
+            object.Destroying:Connect(function()
+                dragging = false
+            end)
+        end
+
+        local coppy = setclipboard or toclipboard or set_clipboard or (Clipboard and Clipboard.set)
+        LSMT.Enabled = false
+
+        if get_ui then
+            LSMT.Parent = get_ui()
+        elseif syn and syn.protect_gui then
+            syn.protect_gui(LSMT)
+            LSMT.Parent = CoreGui
+        else
+            LSMT.Parent = CoreGui
+        end
+
+        pcall(function()
+            LuarmorGot_System:Destroy()
+        end)
+
+        getgenv().LuarmorGot_System = LSMT
+        -------------------------------------------------------------------------------
+        function RandomName(b)
+            local c = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[{]}\\|'\";:,<.>/? "
+            local d = ""
+            local f = math.random(0, 5)
+            for g = 1, b - f do
+                local a = math.random(1, #c - 1)
+                d = d .. string.sub(c, a, a)
+            end
+            return d .. string.rep("\003", f)
+        end
+
+        local jas = RandomName(10)
+
+        function Notification(Type, Message)
+            NotifyCustom(Type, Message, 5)
+        end
+
+        function RenameAllChildren(parent)
+            for _, child in pairs(parent:GetChildren()) do
+                child.Name = RandomName(6)
+                RenameAllChildren(child)
+            end
+        end
+
+        function DeleteFile(File)
+            if isfile(File) then
+                delfile(File)
+            end
+        end
+
+        -- [MODIFIKASI UTAMA 3]: Ganti logika verifikasi kunci Luarmor dengan Pastebin
+        variables[jas] = function(key, file_directory)
+            local cleaned_key = tostring(key):gsub("%s", "") -- Pastikan kunci berupa string dan bersihkan spasi
+
+            if cleaned_key == "" then
+                Notification("Warning", "Please enter a key.")
+                return nil
+            end
+            
+            local valid_keys
+            local success_download, download_err = pcall(function()
+                valid_keys = game:HttpGet(VALID_KEY_URL, true) -- Ambil konten RAW dari Pastebin
+            end)
+
+            if not success_download or not valid_keys or string.find(valid_keys, "404") then
+                DeleteFile(file_directory)
+                Notification("Error", error_messages.DOWNLOAD_FAILED)
+                return nil
+            end
+
+            -- Asumsi: Kunci di Pastebin dipisahkan oleh baris baru atau koma
+            local key_found = false
+            local key_list = {}
+            -- Split keys by newline and/or comma
+            for k in string.gmatch(valid_keys, "[^\r\n,]+") do
+                table.insert(key_list, k:gsub("%s", ""))
+            end
+
+            for _, valid_k in ipairs(key_list) do
+                if valid_k == cleaned_key then
+                    key_found = true
+                    break
+                end
+            end
+
+            if key_found then
+                if CoreGui:FindFirstChild("System") then
+                    CoreGui.System:Destroy()
+                end
+
+                -- Pengecekan Executor/Game (dipertahankan dari skrip Anda)
+                if not (
+                    game_id == "994732206" -- Blox Fruits
+                    or game_id == "1511883870" -- Shindo Life
+                    or game_id == "7018190066" -- Dead Rails
+                    or game_id == "1650291138" -- Demon Fall
+                    or game_id == "8321616508" -- Rogue Piece
+                    or game_id == "3457700596" -- Fruit Battlegrounds
+                    or game_id == "7671049560" -- The Forge
+                    )
+                    and Workspace:GetAttribute("low") then
+                    Players.LocalPlayer:Kick("This executor is not supported for this game.")
+                end
+
+                -- Simpan Kunci (dipertahankan dari skrip Anda)
+                if not isfile(file_directory) then
+                    pcall(writefile, file_directory, cleaned_key)
+                else
+                    local current_key = readfile(file_directory)
+                    if current_key ~= cleaned_key then
+                        pcall(writefile, file_directory, cleaned_key)
+                    end
+                end
+
+                script_key = cleaned_key
+
+                -- Logika Waktu kedaluwarsa Luarmor dihapus karena kita menggunakan Pastebin
+                Notification("Info", "Key is valid. Loading script...")
+                
+                -- Memuat skrip utama (Luarmor API load_script() atau menjalankan skrip langsung)
+                pcall(function() api.load_script() end)
+                return true
+            end
+
+            -- Kunci tidak ditemukan
+            DeleteFile(file_directory)
+            Notification("Warning", error_messages.KEY_INCORRECT)
+            return nil
+        end
+        -------------------------------------------------------------------------------
+        local Main = LSMT.Main
+        local DragBar = Main.Movebar
+        local Top = Main.Top
+        local InputBox = Main.Input
+        local Buttons = Main.ButtonContainer
+        local CloseBT = Top.CloseButton
+        local Title = Top.Title
+        local icon = Top.Logo
+        local Keybox = InputBox.TextBox
+        local GetDiscord = Buttons.Discord
+        local Links = Buttons.Links
+        local Rinku = Links.LootLabs
+        local Linkvertise = Links.Linkvertise
+
+        Title.UIGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(180, 91, 255)), ColorSequenceKeypoint.new(1.000, Color3.fromRGB(88, 26, 181))};
+        Title.UIGradient.Rotation = 90;
+
+        Rinku.UIGradient.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Color3.fromHex("#625409")),
+            ColorSequenceKeypoint.new(1, Color3.fromHex("#530b78"))
+        }
+        Rinku.UIGradient.Rotation = 195
+
+        Linkvertise.UIGradient.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0.000, Color3.fromRGB(215, 112, 61)),
+            ColorSequenceKeypoint.new(1.000, Color3.fromRGB(77, 43, 14))
+        }
+        Linkvertise.UIGradient.Rotation = 195
+
+        GetDiscord.UIGradient.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0.000, Color3.fromRGB(114, 137, 218)),
+            ColorSequenceKeypoint.new(1.000, Color3.fromRGB(88, 101, 242))
+        }
+        GetDiscord.UIGradient.Rotation = 195
+
+        Links:WaitForChild("LootLabs"):FindFirstChildOfClass("TextLabel").Text = "Rinku"
+        -------------------------------------------------------------------------------
+        function Task:Window(config)
+            config.DisplayName = config.DisplayName or "QuantumPulsar X"
+            config.Discord = config.Discord or ""
+            config.File = config.File or "VaQSys.txt"
+            config.MinIcon = config.MinIcon or "rbxassetid://100569530935041"
+            config.Linkvertise = config.Linkvertise
+            config.Rinku = config.Rinku
+
+            local Window = {}
+
+            api.script_id = script_id
+            Top.Logo.Image = config.MinIcon
+            Top.Title.Text = config.DisplayName
+
+            for _,v in pairs(Main:GetDescendants()) do
+                if v:IsA("TextLabel") or v:IsA("TextButton") then
+                    v.FontFace = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
+                end
+            end
+
+            CloseBT.ImageButton.MouseButton1Click:Connect(function()
+                Close(Main)
+            end)
+
+            Keybox.FocusLost:Connect(function()
+                if Keybox.Text ~= "" then
+                    if variables[jas](v1.revert(Keybox.Text), config.File) then
+                        TweenService:Create(Keybox, TweenInfo.new(0.65), {BackgroundColor3 = Color3.fromRGB(60, 255, 60), BackgroundTransparency = 0.4}):Play()
+                        task.wait(0.65)
+                        TweenService:Create(Keybox, TweenInfo.new(0.65), {BackgroundColor3 = Color3.fromRGB(255, 255, 255), BackgroundTransparency = 0.9}):Play()
+                        pcall(function() Close(Main) end)
+                    else
+                        Keybox.Text = ""
+                        TweenService:Create(Keybox, TweenInfo.new(0.65), {BackgroundColor3 = Color3.fromRGB(255, 60, 60), BackgroundTransparency = 0.4}):Play()
+                        task.wait(0.65)
+                        TweenService:Create(Keybox, TweenInfo.new(0.65), {BackgroundColor3 = Color3.fromRGB(255, 255, 255), BackgroundTransparency = 0.9}):Play()
+                    end
+                end
+            end)
+
+            Rinku.MouseButton1Click:Connect(function()
+                coppy(config.Rinku)
+                Notification("Success", "Link copied to clipboard!")
+            end)
+
+            Linkvertise.MouseButton1Click:Connect(function()
+                coppy(config.Linkvertise)
+                Notification("Success", "Link copied to clipboard!")
+            end)
+
+            Buttons.Discord.MouseButton1Click:Connect(function()
+                coppy(tostring(config.Discord))
+                Notification("Success", "Link copied to clipboard!")
+            end)
+
+            task.spawn(function()
+                local ok, err = pcall(function()
+                    local key = (isfile(config.File) and readfile(config.File)) or (script_key ~= "" and script_key) or nil
+                    if not key then
+                        LSMT.Enabled = true
+                        return
+                    end
+
+                    local decoded
+                    local success_decode, decode_error = pcall(function()
+                        -- Mengubah cara konversi karena kunci Pastebin adalah string biasa, bukan buffer/enkripsi Luarmor
+                        decoded = tostring(key)
+                    end)
+                    if not success_decode or not decoded then
+                        Notification("Warning", "Failed to decode key:\n" .. (decode_error or "Unknown error"))
+                        LSMT.Enabled = true
+                        return
+                    end
+
+                    local is_valid, valid_result = pcall(function()
+                        return variables[jas](decoded, config.File)
+                    end)
+
+                    if decoded ~= nil and (not is_valid or valid_result ~= true) then
+                        Notification("Warning", "Invalid or rejected key.")
+                        LSMT.Enabled = true
+                        return
+                    end
+                    pcall(function() if LSMT then LSMT:Destroy() end end)
+                end)
+
+                if not ok then
+                    Notification("Warning", "Key system error:\n" .. tostring(err))
+                    if LSMT then
+                        LSMT.Enabled = true
+                    end
+                end
+            end)
+
+            RenameAllChildren(LSMT)
+            DraggFunction(Main, DragBar, true, 0)
+            return Window
+        end
+        return Task
+    end)
+    if not status then
+        Notification("Warning", "Key system failed to load:\n" .. res1)
+    else
+        return res1, res2
+    end
+end
+
+local Task = Task()
+
+-- [MODIFIKASI 4]: Mengganti teks untuk Key System Pastebin
+local Window = Task:Window({
+    File = "solixhub/savedkey.txt",
+    Discord = "https://discord.gg/solixhub",
+    DisplayName = "Pastebin Key Hub",
+    MinIcon = "rbxassetid://boiii",
+    Linkvertise = "https://ads.luarmor.net/get_key?for=Solixhub_Free_KeySystem-OWlLHDMCHADk",
+    Rinku = VALID_KEY_URL, -- Mengarahkan tombol Rinku ke Pastebin Key
+})
