@@ -1,4 +1,4 @@
-local RayfieldLibrary = require("Library.library")
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Theme = {
     TextColor = Color3.fromRGB(240, 240, 240),
@@ -43,60 +43,129 @@ local Theme = {
 }
 
 local Window = Rayfield:CreateWindow({
-   Name = "xavyera",
-   Icon = 0, -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
-   LoadingTitle = "xavyera Interface Suite",
-   LoadingSubtitle = "by Sirius",
-   ShowText = "xavyera", 
-   Theme = Theme,
+    Name = "xavyera",
+    Icon = 0,
+    LoadingTitle = "xavyera Interface Suite",
+    LoadingSubtitle = "by Sirius",
+    ShowText = "xavyera", 
+    Theme = Theme,
 
-   ToggleUIKeybind = "K",
+    ToggleUIKeybind = "K",
 
-   DisableRayfieldPrompts = false,
-   DisableBuildWarnings = false, 
+    DisableRayfieldPrompts = false,
+    DisableBuildWarnings = false, 
 
-   ConfigurationSaving = {
-      Enabled = true,
-      FolderName = nil,
-      FileName = "Big Hub"
-   },
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = nil,
+        FileName = "Big Hub"
+    },
 
-   Discord = {
-      Enabled = false, 
-      Invite = "noinvitelink",
-      RememberJoins = true
-   },
-   KeySystem = true, -- Set this to true to use our key system
-   KeySettings = {
-      Title = "xavyera",
-      Subtitle = "Key System",
-      Note = "Sebutan bima",
-      FileName = "xavyera", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
-      SaveKey = false, -- The user's key will be saved, but if you change the key, they will be unable to use your script
-      GrabKeyFromSite = true, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
-      Key = {"https://pastebin.com/raw/aRyhMYLW"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
-   }
+    Discord = {
+        Enabled = false, 
+        Invite = "noinvitelink",
+        RememberJoins = true
+    },
+    KeySystem = true,
+    KeySettings = {
+        Title = "xavyera",
+        Subtitle = "Key System",
+        Note = "Sebutan bima",
+        FileName = "xavyera",
+        SaveKey = false,
+        GrabKeyFromSite = true,
+        Key = {"https://pastebin.com/raw/aRyhMYLW"}
+    }
 })
 
-local createTabs = require("menu.menu")
-local tabs = createTabs(Window)
-local MainTab = tabs.MainTab
-local MainSection = tabs.MainSection
+-- Bagian yang sebelumnya ada di menu/menu.lua
+local MainTab = Window:CreateTab("🏠 Main", nil)
+local MainSection = MainTab:CreateSection("Main")
+local FishingTab = Window:CreateTab("🎣 Fishing", nil)
+local TeleportTab = Window:CreateTab("🚀 Teleport", nil)
+local EventTab = Window:CreateTab("🎉 Event", nil)
+local ShopTab = Window:CreateTab("🛒 Shop", nil)
+local UtilityTab = Window:CreateTab("🔧 Utility", nil)
+local TradeTab = Window:CreateTab("🤝 Trade", nil)
+local MiscTab = Window:CreateTab("📦 Misc", nil)
+local SettingsTab = Window:CreateTab("⚙️ Settings", nil)
+local WebhookTab = Window:CreateTab("🌐 Webhook", nil)
 
-local fitur = require("fitur.fitur")
-fitur.addFeatures(tabs.MainTab)
+-- Tabel yang merepresentasikan semua tab (seperti hasil kembalian dari menu/menu.lua)
+local tabs = {
+    MainTab = MainTab,
+    MainSection = MainSection,
+    FishingTab = FishingTab,
+    TeleportTab = TeleportTab,
+    EventTab = EventTab,
+    ShopTab = ShopTab,
+    UtilityTab = UtilityTab,
+    TradeTab = TradeTab,
+    MiscTab = MiscTab,
+    SettingsTab = SettingsTab,
+    WebhookTab = WebhookTab
+}
+
+-- Bagian yang sebelumnya ada di fitur/fitur.lua (Fungsi addFeatures)
+local function addFeatures(tab)
+    local ClickSpeedInput = tab:CreateInput({
+        Name = "Click Speed (seconds)",
+        PlaceholderText = "Enter delay (e.g., 0.5)",
+        RemoveTextAfterFocusLost = false,
+        Callback = function(Text)
+            local num = tonumber(Text)
+            if num and num >= 0.1 and num <= 2 then
+                _G.clickDelay = num
+                game.StarterGui:SetCore("SendNotification", {Title="Youtube Hub"; Text="Click speed set to " .. num .. " seconds"; Duration=3;})
+            else
+                game.StarterGui:SetCore("SendNotification", {Title="Youtube Hub"; Text="Invalid input. Enter a number between 0.1 and 2."; Duration=5;})
+                _G.clickDelay = 1 -- default
+            end
+        end,
+    })
+
+    local AutoClickToggle = tab:CreateToggle({
+        Name = "Auto Clicker Toggle",
+        CurrentValue = false,
+        Flag = "AutoClick",
+        Callback = function(Value)
+            _G.autoClick = Value
+            if Value then
+                if _G.autoClickStarted == nil then
+                    _G.autoClickStarted = true
+                    game.StarterGui:SetCore("SendNotification", {Title="Youtube Hub"; Text="Auto Clicker Activated!"; Duration=5;})
+                    local plr = game:GetService('Players').LocalPlayer
+                    local m = plr:GetMouse()
+                    coroutine.wrap(function()
+                        while _G.autoClick do
+                            m:Button1Down()
+                            wait(0.05)
+                            m:Button1Up()
+                            wait(_G.clickDelay or 1)
+                        end
+                    end)()
+                end
+            else
+                _G.autoClickStarted = nil
+            end
+        end,
+    })
+end
+
+-- Panggil fungsi fitur pada tab utama
+addFeatures(tabs.MainTab)
 
 Rayfield:Notify({
-   Title = "You executed the script",
-   Content = "Very cool gui",
-   Duration = 5,
-   Image = 13047715178,
-   Actions = {
-      Ignore = {
-         Name = "Okay!",
-         Callback = function()
-         print("The user tapped Okay!")
-      end
-   },
-},
+    Title = "You executed the script",
+    Content = "Very cool gui",
+    Duration = 5,
+    Image = 13047715178,
+    Actions = {
+        Ignore = {
+            Name = "Okay!",
+            Callback = function()
+            print("The user tapped Okay!")
+            end
+        },
+    },
 })
