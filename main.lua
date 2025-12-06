@@ -1,11 +1,9 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
--- === PENGATURAN REMOTE GAME (HARUS DIGANTI) ===
--- GUNAKAN EXPLOIT ANDA UNTUK MENEMUKAN NAMA REMOTE EVENT/FUNCTION YANG TEPAT DI GAME FISH IT!
-local REMOTE_CAST_ROD_NAME = "CastRod"       -- Contoh: Ganti dengan nama Remote yang benar
-local REMOTE_CATCH_FISH_NAME = "ReelIn"     -- Contoh: Ganti dengan nama Remote yang benar
-local URL_SKRIP_ANDA_DI_SINI = 'https://URL_SKRIP_ANDA_DI_SINI/raw/...' -- Ganti dengan URL skrip Anda
--- =============================================
+-- Variabel Remote dan URL yang disederhanakan
+local REMOTE_CAST_ROD_NAME = ""       
+local REMOTE_CATCH_FISH_NAME = ""     
+local URL_SKRIP_ANDA_DI_SINI = '' 
 
 -- Global Variables untuk Status Fitur
 _G.AutoFishNormal = false
@@ -107,31 +105,30 @@ local tabs = {
 
 -- MENDAPATKAN REFERENSI KE REMOTE EVENT DENGAN PENCEGAHAN ERROR
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local CastRemote = pcall(function() return ReplicatedStorage:WaitForChild(REMOTE_CAST_ROD_NAME) end)
-local CatchRemote = pcall(function() return ReplicatedStorage:WaitForChild(REMOTE_CATCH_FISH_NAME) end)
+local CastRemote = ReplicatedStorage:WaitForChild(REMOTE_CAST_ROD_NAME, 5) 
+local CatchRemote = ReplicatedStorage:WaitForChild(REMOTE_CATCH_FISH_NAME, 5)
 
 -- SISTEM: AUTO FISHING LOOP
 local function AutoFishLoop()
     if not CastRemote or not CatchRemote then
         Rayfield:Notify({
             Title = "Gagal Auto Fish",
-            Content = "Remote game ('".. REMOTE_CAST_ROD_NAME .."' atau '".. REMOTE_CATCH_FISH_NAME .."') tidak ditemukan. Harap periksa nama Remote yang benar.",
+            Content = "Remote game ('".. REMOTE_CAST_ROD_NAME .."' atau '".. REMOTE_CATCH_FISH_NAME .."') tidak ditemukan. Harap isi variabel Remote.",
             Duration = 7,
         })
         _G.AutoFishNormal = false
-        Window:GetCurrentTab():GetSection("Main"):GetToggle("Auto Fishing Normal"):Set(false)
         return
     end
 
     while _G.AutoFishNormal do
         -- 1. LEMPAR PANCING (CAST)
-        CastRemote:FireServer() -- Asumsi: RemoteEvent
+        CastRemote:FireServer() 
         
         -- 2. TUNGGU DETEKSI IKAN (Gunakan Catch Delay yang diatur user)
         wait(_G.CatchDelay or 1.2)
         
         -- 3. TARIK IKAN (CATCH)
-        CatchRemote:FireServer() -- Asumsi: RemoteEvent
+        CatchRemote:FireServer() 
         
         -- 4. TUNGGU SEBENTAR SEBELUM MELEMPAR LAGI
         wait(0.5) 
@@ -142,6 +139,12 @@ end
 local function refreshScript()
     if Window then
         Window:Close()
+    end
+    
+    -- Memuat ulang hanya jika URL diisi
+    if URL_SKRIP_ANDA_DI_SINI == '' then
+         Rayfield:Notify({Title = "Refresh Gagal", Content = "URL skrip belum diatur.", Duration = 5,})
+         return
     end
     
     local scriptSource = game:HttpGet(URL_SKRIP_ANDA_DI_SINI)
@@ -165,7 +168,7 @@ local function addSettingsFeatures(tab)
     tab:CreateButton({
         Name = "Refresh Skrip Terbaru",
         Image = "rbxassetid://10636357351",
-        Description = "Memuat ulang skrip dari sumber untuk mendapatkan update terbaru.",
+        Description = "Memuat ulang skrip dari sumber (perlu mengatur URL).",
         Callback = function()
             refreshScript()
         end,
@@ -174,8 +177,8 @@ end
 
 -- FUNGSI MENAMBAH FITUR VISUAL KE FISHING TAB
 local function addFishingFeatures(tab)
-    local FishVisualSection = tab:CreateSection("Visual Fishing Settings")
-
+    local FishVisualSection = tab:CreateSection("Visual Fishing Settings") 
+    
     FishVisualSection:CreateToggle({
         Name = "Enable Fishing Visuals",
         CurrentValue = false,
@@ -212,11 +215,10 @@ local function addFishingFeatures(tab)
     })
 end
 
--- FUNGSI MENAMBAH FITUR TELEPORT KE TELEPORT TAB (Bonus)
+-- FUNGSI MENAMBAH FITUR TELEPORT KE TELEPORT TAB
 local function addTeleportFeatures(tab)
     local TeleportSection = tab:CreateSection("Teleport Locations")
 
-    -- Contoh: Teleport ke koordinat
     TeleportSection:CreateButton({
         Name = "Teleport ke Area Fishing Utama",
         Description = "Teleport ke koordinat umum area memancing.",
@@ -234,9 +236,9 @@ end
 
 
 -- FUNGSI MENAMBAH FITUR KE MAIN TAB
-local function addFeatures(tab)
+local function addFeatures(section)
     -- === Fitur Clicker ===
-    tab:CreateInput({
+    section:CreateInput({
         Name = "Click Speed (seconds)",
         PlaceholderText = "Enter delay (e.g., 0.5)",
         RemoveTextAfterFocusLost = false,
@@ -252,7 +254,7 @@ local function addFeatures(tab)
         end,
     })
 
-    tab:CreateToggle({
+    section:CreateToggle({
         Name = "Auto Clicker Toggle",
         CurrentValue = false,
         Flag = "AutoClick",
@@ -281,7 +283,7 @@ local function addFeatures(tab)
 
     -- === FITUR FISHING ===
     
-    tab:CreateToggle({
+    section:CreateToggle({
         Name = "Auto Fishing Normal",
         CurrentValue = false,
         Flag = "AutoFishNormal",
@@ -290,12 +292,12 @@ local function addFeatures(tab)
             game.StarterGui:SetCore("SendNotification", {Title="Auto Fishing"; Text="Auto Fishing Normal disetel ke: " .. tostring(Value); Duration=3;})
             
             if Value then
-                coroutine.wrap(AutoFishLoop)()
+                coroutine.wrap(AutoFishLoop)() 
             end
         end,
     })
 
-    tab:CreateToggle({
+    section:CreateToggle({
         Name = "Blatant Mode",
         CurrentValue = false,
         Flag = "BlatantMode",
@@ -305,7 +307,7 @@ local function addFeatures(tab)
         end,
     })
 
-    tab:CreateInput({
+    section:CreateInput({
         Name = "Catch Delay (seconds)",
         PlaceholderText = "1.2",
         RemoveTextAfterFocusLost = false,
@@ -320,7 +322,7 @@ local function addFeatures(tab)
         end,
     })
     
-    tab:CreateInput({
+    section:CreateInput({
         Name = "Special Delay (seconds)",
         PlaceholderText = "0.1",
         RemoveTextAfterFocusLost = false,
@@ -335,7 +337,7 @@ local function addFeatures(tab)
         end,
     })
 
-    tab:CreateButton({
+    section:CreateButton({
         Name = "Fix Stuck In Sea",
         Image = "rbxassetid://10636357351",
         Callback = function()
@@ -349,7 +351,7 @@ local function addFeatures(tab)
 end
 
 -- PEMANGGILAN FUNGSI
-addFeatures(tabs.MainTab)
+addFeatures(tabs.MainSection) 
 addSettingsFeatures(tabs.SettingsTab)
 addFishingFeatures(tabs.FishingTab)
 addTeleportFeatures(tabs.TeleportTab)
