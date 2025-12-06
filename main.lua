@@ -1,203 +1,102 @@
-	local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local RayfieldLibrary = require("Library.library")
 
-    
-    local Window = RayfieldLibrary:CreateWindow({
-		Name = "Rayfield Example Window",
-		LoadingTitle = "Rayfield Interface Suite",
-		Theme = 'Default',
-		Icon = 0,
-		LoadingSubtitle = "by Sirius",
-		ConfigurationSaving = {
-			Enabled = true,
-			FolderName = nil, -- Create a custom folder for your hub/game
-			FileName = "Big Hub52"
-		},
-		Discord = {
-			Enabled = false,
-			Invite = "noinvitelink", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ABCD would be ABCD
-			RememberJoins = true -- Set this to false to make them join the discord every time they load it up
-		},
-		KeySystem = false, -- Set this to true to use our key system
-		KeySettings = {
-			Title = "Untitled",
-			Subtitle = "Key System",
-			Note = "No method of obtaining the key is provided",
-			FileName = "Key", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
-			SaveKey = true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
-			GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
-			Key = {"Hello"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
-		}
-	})
+local Theme = {
+    TextColor = Color3.fromRGB(240, 240, 240),
 
-	local Tab = Window:CreateTab("Tab Example", 'key-round') -- Title, Image
-	local Tab2 = Window:CreateTab("Tab Example 2", 4483362458) -- Title, Image
+    Background = Color3.fromRGB(25, 25, 25),
+    Topbar = Color3.fromRGB(34, 34, 34),
+    Shadow = Color3.fromRGB(20, 20, 20),
 
-	local Section = Tab2:CreateSection("Section")
+    NotificationBackground = Color3.fromRGB(20, 20, 20),
+    NotificationActionsBackground = Color3.fromRGB(230, 230, 230),
 
+    TabBackground = Color3.fromRGB(80, 80, 80),
+    TabStroke = Color3.fromRGB(85, 85, 85),
+    TabBackgroundSelected = Color3.fromRGB(210, 210, 210),
+    TabTextColor = Color3.fromRGB(240, 240, 240),
+    SelectedTabTextColor = Color3.fromRGB(50, 50, 50),
 
-	local ColorPicker = Tab2:CreateColorPicker({
-		Name = "Color Picker",
-		Color = Color3.fromRGB(255,255,255),
-		Flag = "ColorPicfsefker1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-		Callback = function(Value)
-			-- The function that takes place every time the color picker is moved/changed
-			-- The variable (Value) is a Color3fromRGB value based on which color is selected
-		end
-	})
+    ElementBackground = Color3.fromRGB(35, 35, 35),
+    ElementBackgroundHover = Color3.fromRGB(40, 40, 40),
+    SecondaryElementBackground = Color3.fromRGB(25, 25, 25),
+    ElementStroke = Color3.fromRGB(50, 50, 50),
+    SecondaryElementStroke = Color3.fromRGB(40, 40, 40),
+            
+    SliderBackground = Color3.fromRGB(50, 138, 220),
+    SliderProgress = Color3.fromRGB(50, 138, 220),
+    SliderStroke = Color3.fromRGB(58, 163, 255),
 
-	local Slider = Tab2:CreateSlider({
-		Name = "Slider Example",
-		Range = {0, 100},
-		Increment = 10,
-		Suffix = "Bananas",
-		CurrentValue = 40,
-		Flag = "Slidefefsr1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-		Callback = function(Value)
-			-- The function that takes place when the slider changes
-			-- The variable (Value) is a number which correlates to the value the slider is currently at
-		end,
-	})
+    ToggleBackground = Color3.fromRGB(30, 30, 30),
+    ToggleEnabled = Color3.fromRGB(0, 146, 214),
+    ToggleDisabled = Color3.fromRGB(100, 100, 100),
+    ToggleEnabledStroke = Color3.fromRGB(0, 170, 255),
+    ToggleDisabledStroke = Color3.fromRGB(125, 125, 125),
+    ToggleEnabledOuterStroke = Color3.fromRGB(100, 100, 100),
+    ToggleDisabledOuterStroke = Color3.fromRGB(65, 65, 65),
 
-	local Input = Tab2:CreateInput({
-		Name = "Input Example",
-		CurrentValue = '',
-		PlaceholderText = "Input Placeholder",
-		Flag = 'dawdawd',
-		RemoveTextAfterFocusLost = false,
-		Callback = function(Text)
-			-- The function that takes place when the input is changed
-			-- The variable (Text) is a string for the value in the text box
-		end,
-	})
+    DropdownSelected = Color3.fromRGB(40, 40, 40),
+    DropdownUnselected = Color3.fromRGB(30, 30, 30),
 
+    InputBackground = Color3.fromRGB(30, 30, 30),
+    InputStroke = Color3.fromRGB(65, 65, 65),
+    PlaceholderColor = Color3.fromRGB(178, 178, 178)
+}
 
-	--RayfieldLibrary:Notify({Title = "Rayfield Interface", Content = "Welcome to Rayfield. These - are the brand new notification design for Rayfield, with custom sizing and Rayfield calculated wait times.", Image = 4483362458})
+local Window = Rayfield:CreateWindow({
+   Name = "xavyera",
+   Icon = 0, -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
+   LoadingTitle = "xavyera Interface Suite",
+   LoadingSubtitle = "by Sirius",
+   ShowText = "xavyera", 
+   Theme = Theme,
 
-	local Section = Tab:CreateSection("Section Example")
+   ToggleUIKeybind = "K",
 
-	local Button = Tab:CreateButton({
-		Name = "Change Theme",
-		Callback = function()
-			-- The function that takes place when the button is pressed
-			Window.ModifyTheme('DarkBlue')
-		end,
-	})
+   DisableRayfieldPrompts = false,
+   DisableBuildWarnings = false, 
 
-	local Toggle = Tab:CreateToggle({
-		Name = "Toggle Example",
-		CurrentValue = false,
-		Flag = "Toggle1adwawd", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-		Callback = function(Value)
-			-- The function that takes place when the toggle is pressed
-			-- The variable (Value) is a boolean on whether the toggle is true or false
-		end,
-	})
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = nil,
+      FileName = "Big Hub"
+   },
 
-	local ColorPicker = Tab:CreateColorPicker({
-		Name = "Color Picker",
-		Color = Color3.fromRGB(255,255,255),
-		Flag = "ColorPicker1awd", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-		Callback = function(Value)
-			-- The function that takes place every time the color picker is moved/changed
-			-- The variable (Value) is a Color3fromRGB value based on which color is selected
-		end
-	})
+   Discord = {
+      Enabled = false, 
+      Invite = "noinvitelink",
+      RememberJoins = true
+   },
+   KeySystem = true, -- Set this to true to use our key system
+   KeySettings = {
+      Title = "xavyera",
+      Subtitle = "Key System",
+      Note = "Sebutan bima",
+      FileName = "xavyera", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
+      SaveKey = false, -- The user's key will be saved, but if you change the key, they will be unable to use your script
+      GrabKeyFromSite = true, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
+      Key = {"https://pastebin.com/raw/aRyhMYLW"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
+   }
+})
 
-	local Slider = Tab:CreateSlider({
-		Name = "Slider Example",
-		Range = {0, 100},
-		Increment = 10,
-		Suffix = "Bananas",
-		CurrentValue = 40,
-		Flag = "Slider1dawd", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-		Callback = function(Value)
-			-- The function that takes place when the slider changes
-			-- The variable (Value) is a number which correlates to the value the slider is currently at
-		end,
-	})
+local createTabs = require("menu.menu")
+local tabs = createTabs(Window)
+local MainTab = tabs.MainTab
+local MainSection = tabs.MainSection
 
-	local Input = Tab:CreateInput({
-		Name = "Input Example",
-		CurrentValue = "Helo",
-		PlaceholderText = "Adaptive Input",
-		RemoveTextAfterFocusLost = false,
-		Flag = 'Input1',
-		Callback = function(Text)
-			-- The function that takes place when the input is changed
-			-- The variable (Text) is a string for the value in the text box
-		end,
-	})
+local fitur = require("fitur.fitur")
+fitur.addFeatures(tabs.MainTab)
 
-	local thoptions = {}
-	for themename, theme in pairs(RayfieldLibrary.Theme) do
-		table.insert(thoptions, themename)
-	end
-
-	local Dropdown = Tab:CreateDropdown({
-		Name = "Theme",
-		Options = thoptions,
-		CurrentOption = {"Default"},
-		MultipleOptions = false,
-		Flag = "Dropdown1",
-		Callback = function(Options)
-		end,
-	})
-
-
-	Window.ModifyTheme({
-		TextColor = Color3.fromRGB(50, 55, 60),
-		Background = Color3.fromRGB(240, 245, 250),
-		Topbar = Color3.fromRGB(215, 225, 235),
-		Shadow = Color3.fromRGB(200, 210, 220),
-
-		NotificationBackground = Color3.fromRGB(210, 220, 230),
-		NotificationActionsBackground = Color3.fromRGB(225, 230, 240),
-
-		TabBackground = Color3.fromRGB(200, 210, 220),
-		TabStroke = Color3.fromRGB(180, 190, 200),
-		TabBackgroundSelected = Color3.fromRGB(175, 185, 200),
-		TabTextColor = Color3.fromRGB(50, 55, 60),
-		SelectedTabTextColor = Color3.fromRGB(30, 35, 40),
-
-		ElementBackground = Color3.fromRGB(210, 220, 230),
-		ElementBackgroundHover = Color3.fromRGB(220, 230, 240),
-		SecondaryElementBackground = Color3.fromRGB(200, 210, 220),
-		ElementStroke = Color3.fromRGB(190, 200, 210),
-		SecondaryElementStroke = Color3.fromRGB(180, 190, 200),
-
-		SliderBackground = Color3.fromRGB(200, 220, 235),  -- Lighter shade
-		SliderProgress = Color3.fromRGB(70, 130, 180),
-		SliderStroke = Color3.fromRGB(150, 180, 220),
-
-		ToggleBackground = Color3.fromRGB(210, 220, 230),
-		ToggleEnabled = Color3.fromRGB(70, 160, 210),
-		ToggleDisabled = Color3.fromRGB(180, 180, 180),
-		ToggleEnabledStroke = Color3.fromRGB(60, 150, 200),
-		ToggleDisabledStroke = Color3.fromRGB(140, 140, 140),
-		ToggleEnabledOuterStroke = Color3.fromRGB(100, 120, 140),
-		ToggleDisabledOuterStroke = Color3.fromRGB(120, 120, 130),
-
-		DropdownSelected = Color3.fromRGB(220, 230, 240),
-		DropdownUnselected = Color3.fromRGB(200, 210, 220),
-
-		InputBackground = Color3.fromRGB(220, 230, 240),
-		InputStroke = Color3.fromRGB(180, 190, 200),
-		PlaceholderColor = Color3.fromRGB(150, 150, 150)
-	})
-
-	local Keybind = Tab:CreateKeybind({
-		Name = "Keybind Example",
-		CurrentKeybind = "Q",
-		HoldToInteract = false,
-		Flag = "Keybind1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-		Callback = function(Keybind)
-			-- The function that takes place when the keybind is pressed
-			-- The variable (Keybind) is a boolean for whether the keybind is being held or not (HoldToInteract needs to be true)
-		end,
-	})
-
-	local Label = Tab:CreateLabel("Label Example")
-
-	local Label2 = Tab:CreateLabel("Warning", 4483362458, Color3.fromRGB(255, 159, 49),  true)
-
-	local Paragraph = Tab:CreateParagraph({Title = "Paragraph Example", Content = "Paragraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph Example"})
+Rayfield:Notify({
+   Title = "You executed the script",
+   Content = "Very cool gui",
+   Duration = 5,
+   Image = 13047715178,
+   Actions = {
+      Ignore = {
+         Name = "Okay!",
+         Callback = function()
+         print("The user tapped Okay!")
+      end
+   },
+},
+})
