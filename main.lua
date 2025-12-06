@@ -1,5 +1,18 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
+-- === PENGATURAN REMOTE GAME (HARUS DIGANTI) ===
+-- GUNAKAN EXPLOIT ANDA UNTUK MENEMUKAN NAMA REMOTE EVENT/FUNCTION YANG TEPAT DI GAME FISH IT!
+local REMOTE_CAST_ROD_NAME = "CastRod"       -- Contoh: Ganti dengan nama Remote yang benar
+local REMOTE_CATCH_FISH_NAME = "ReelIn"     -- Contoh: Ganti dengan nama Remote yang benar
+local URL_SKRIP_ANDA_DI_SINI = 'https://URL_SKRIP_ANDA_DI_SINI/raw/...' -- Ganti dengan URL skrip Anda
+-- =============================================
+
+-- Global Variables untuk Status Fitur
+_G.AutoFishNormal = false
+_G.CatchDelay = 1.2
+_G.autoClick = false
+_G.clickDelay = 1
+
 local Theme = {
     TextColor = Color3.fromRGB(240, 240, 240),
     Background = Color3.fromRGB(25, 25, 25),
@@ -92,9 +105,136 @@ local tabs = {
     WebhookTab = WebhookTab
 }
 
--- HANYA ADA SATU FUNGSI addFeatures SEKARANG YANG BERISI SEMUA FITUR
-local function addFeatures(tab)
+-- MENDAPATKAN REFERENSI KE REMOTE EVENT DENGAN PENCEGAHAN ERROR
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CastRemote = pcall(function() return ReplicatedStorage:WaitForChild(REMOTE_CAST_ROD_NAME) end)
+local CatchRemote = pcall(function() return ReplicatedStorage:WaitForChild(REMOTE_CATCH_FISH_NAME) end)
+
+-- SISTEM: AUTO FISHING LOOP
+local function AutoFishLoop()
+    if not CastRemote or not CatchRemote then
+        Rayfield:Notify({
+            Title = "Gagal Auto Fish",
+            Content = "Remote game ('".. REMOTE_CAST_ROD_NAME .."' atau '".. REMOTE_CATCH_FISH_NAME .."') tidak ditemukan. Harap periksa nama Remote yang benar.",
+            Duration = 7,
+        })
+        _G.AutoFishNormal = false
+        Window:GetCurrentTab():GetSection("Main"):GetToggle("Auto Fishing Normal"):Set(false)
+        return
+    end
+
+    while _G.AutoFishNormal do
+        -- 1. LEMPAR PANCING (CAST)
+        CastRemote:FireServer() -- Asumsi: RemoteEvent
+        
+        -- 2. TUNGGU DETEKSI IKAN (Gunakan Catch Delay yang diatur user)
+        wait(_G.CatchDelay or 1.2)
+        
+        -- 3. TARIK IKAN (CATCH)
+        CatchRemote:FireServer() -- Asumsi: RemoteEvent
+        
+        -- 4. TUNGGU SEBENTAR SEBELUM MELEMPAR LAGI
+        wait(0.5) 
+    end
+end
+
+-- FUNGSI REFRESH SCRIPT
+local function refreshScript()
+    if Window then
+        Window:Close()
+    end
     
+    local scriptSource = game:HttpGet(URL_SKRIP_ANDA_DI_SINI)
+    
+    if not scriptSource then
+        Rayfield:Notify({Title = "Refresh Gagal", Content = "Gagal mendapatkan sumber skrip. Periksa koneksi atau URL.", Duration = 5,})
+        return
+    end
+
+    local success, err = pcall(function() loadstring(scriptSource)() end)
+
+    if not success then
+        Rayfield:Notify({Title = "Refresh Gagal", Content = "Skrip baru gagal dieksekusi: " .. tostring(err), Duration = 7,})
+    else
+        Rayfield:Notify({Title = "Refresh Berhasil", Content = "Skrip telah dimuat ulang ke versi terbaru.", Duration = 5,})
+    end
+end
+
+-- FUNGSI MENAMBAH FITUR KE SETTINGS TAB
+local function addSettingsFeatures(tab)
+    tab:CreateButton({
+        Name = "Refresh Skrip Terbaru",
+        Image = "rbxassetid://10636357351",
+        Description = "Memuat ulang skrip dari sumber untuk mendapatkan update terbaru.",
+        Callback = function()
+            refreshScript()
+        end,
+    })
+end
+
+-- FUNGSI MENAMBAH FITUR VISUAL KE FISHING TAB
+local function addFishingFeatures(tab)
+    local FishVisualSection = tab:CreateSection("Visual Fishing Settings")
+
+    FishVisualSection:CreateToggle({
+        Name = "Enable Fishing Visuals",
+        CurrentValue = false,
+        Flag = "VisualFishEnabled",
+        Callback = function(Value)
+            _G.VisualFishEnabled = Value
+            game.StarterGui:SetCore("SendNotification", {Title="Visual Fishing"; Text="Visual Fishing disetel ke: " .. tostring(Value); Duration=3;})
+        end,
+    })
+
+    FishVisualSection:CreateDropdown({
+        Name = "Simulated Fish Rarity",
+        Options = {"Common", "Rare", "Legendary", "Mythical", "Secret"},
+        CurrentOption = "Legendary",
+        Flag = "VisualFishRarity",
+        Callback = function(Option)
+            _G.VisualFishRarity = Option
+            game.StarterGui:SetCore("SendNotification", {Title="Visual Fishing"; Text="Simulasi Raritas: " .. Option, Duration=3;})
+        end,
+    })
+
+    FishVisualSection:CreateButton({
+        Name = "Click to 'Catch' Fish (Visual)",
+        Description = "Simulasi visual untuk mengambil ikan yang dipilih di atas.",
+        Image = "rbxassetid://6022634336",
+        Callback = function()
+            if _G.VisualFishEnabled then
+                local rarity = _G.VisualFishRarity or "Legendary"
+                Rayfield:Notify({Title = "🎣 Visual Catch!", Content = "Anda secara visual 'mendapatkan' ikan: " .. rarity, Duration = 4,})
+            else
+                Rayfield:Notify({Title = "⚠️ Fitur Mati", Content = "Aktifkan 'Enable Fishing Visuals' terlebih dahulu.", Duration = 4,})
+            end
+        end,
+    })
+end
+
+-- FUNGSI MENAMBAH FITUR TELEPORT KE TELEPORT TAB (Bonus)
+local function addTeleportFeatures(tab)
+    local TeleportSection = tab:CreateSection("Teleport Locations")
+
+    -- Contoh: Teleport ke koordinat
+    TeleportSection:CreateButton({
+        Name = "Teleport ke Area Fishing Utama",
+        Description = "Teleport ke koordinat umum area memancing.",
+        Image = "rbxassetid://6022634336",
+        Callback = function()
+            local player = game:GetService("Players").LocalPlayer
+            if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                -- GANTI DENGAN KOORDINAT GAME FISH IT YANG TEPAT
+                player.Character:SetPrimaryPartCFrame(CFrame.new(0, 50, 0)) 
+                Rayfield:Notify({Title = "Teleport", Content = "Berhasil teleport ke area utama.", Duration = 3,})
+            end
+        end,
+    })
+end
+
+
+-- FUNGSI MENAMBAH FITUR KE MAIN TAB
+local function addFeatures(tab)
     -- === Fitur Clicker ===
     tab:CreateInput({
         Name = "Click Speed (seconds)",
@@ -148,6 +288,10 @@ local function addFeatures(tab)
         Callback = function(Value)
             _G.AutoFishNormal = Value
             game.StarterGui:SetCore("SendNotification", {Title="Auto Fishing"; Text="Auto Fishing Normal disetel ke: " .. tostring(Value); Duration=3;})
+            
+            if Value then
+                coroutine.wrap(AutoFishLoop)()
+            end
         end,
     })
 
@@ -198,14 +342,17 @@ local function addFeatures(tab)
             local player = game:GetService("Players").LocalPlayer
             if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
                 player.Character.HumanoidRootPart.CFrame = CFrame.new(player.Character.HumanoidRootPart.Position + Vector3.new(0, 10, 0))
-                game.StarterGui:SetCore("SendNotification", {Title="Fix"; Text="Mencoba mengeluarkan Anda dari laut!"; Duration=5;})
+                Rayfield:Notify({Title="Fix", Content="Mencoba mengeluarkan Anda dari laut!", Duration=5,})
             end
         end,
     })
 end
 
--- PEMANGGILAN FUNGSI YANG BENAR
+-- PEMANGGILAN FUNGSI
 addFeatures(tabs.MainTab)
+addSettingsFeatures(tabs.SettingsTab)
+addFishingFeatures(tabs.FishingTab)
+addTeleportFeatures(tabs.TeleportTab)
 
 Rayfield:Notify({
     Title = "You executed the script",
